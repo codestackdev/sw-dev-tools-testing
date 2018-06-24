@@ -63,6 +63,7 @@
     <Compile Include="Services\ApplicationService.cs" />
     <Compile Include="Services\DocumentService.cs" />
     <Compile Include="TempDisplay\IDisposeToken.cs" />
+    <Compile Include="TempDisplay\ManualDisposeToken.cs" />
     <Compile Include="TempDisplay\SyncFormDisposeToken.cs" />
     <Compile Include="TestService.cs" />
   </ItemGroup>

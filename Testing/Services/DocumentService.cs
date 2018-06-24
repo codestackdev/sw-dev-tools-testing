@@ -18,7 +18,7 @@ namespace CodeStack.Community.DevTools.Sw.Testing.Services
 
     public class DocumentService
     {
-        public TEnt GetEntity<TEnt>(IPartDoc part, string name, EntityType_e type)
+        public TEnt GetEntityByName<TEnt>(IPartDoc part, string name, EntityType_e type)
             where TEnt : class
         {
             if (part == null)
@@ -34,8 +34,35 @@ namespace CodeStack.Community.DevTools.Sw.Testing.Services
             return part.GetEntityByName(name, (int)type) as TEnt;
         }
 
+        public IBody2 GetBodyByName(IPartDoc part, string name)
+        {
+            if (part == null)
+            {
+                throw new ArgumentNullException(nameof(part));
+            }
+
+            if (string.IsNullOrEmpty(name))
+            {
+                throw new ArgumentNullException(nameof(name));
+            }
+
+            var bodies = part.GetBodies2((int)swBodyType_e.swAllBodies, false) as object[];
+
+            return bodies.FirstOrDefault(b => (b as IBody2).Name.Equals(
+                name, StringComparison.CurrentCultureIgnoreCase)) as IBody2;
+        }
+
+        public ManualDisposeToken TempDisplayPoints(IModelDoc2 model, IEnumerable<double[]> points)
+        {
+            var dispToken = new ManualDisposeToken();
+
+            TempDisplayPoints(model, points, dispToken);
+
+            return dispToken;
+        }
+
         public void TempDisplayPoints(IModelDoc2 model, IEnumerable<double[]> points,
-            IDisposeToken tempDisposeToken = null)
+            IDisposeToken tempDisposeToken)
         {
             if (model == null)
             {
@@ -60,10 +87,16 @@ namespace CodeStack.Community.DevTools.Sw.Testing.Services
 
             var tempSketchFeat = model.SketchManager.ActiveSketch as IFeature;
 
+            var addToDb = model.SketchManager.AddToDB;
+
+            model.SketchManager.AddToDB = true;
+
             foreach (var pt in points)
             {
                 model.SketchManager.CreatePoint(pt[0], pt[1], pt[2]);
             }
+
+            model.SketchManager.AddToDB = addToDb;
 
             TempDispose(tempDisposeToken, () => 
             {
@@ -78,7 +111,16 @@ namespace CodeStack.Community.DevTools.Sw.Testing.Services
             });
         }
 
-        public void TempDisplayBody(IBody2 body, IModelDoc2 model, IDisposeToken tempDisposeToken = null)
+        public ManualDisposeToken TempDisplayBody(IBody2 body, IModelDoc2 model)
+        {
+            var dispToken = new ManualDisposeToken();
+
+            TempDisplayBody(body, model, dispToken);
+
+            return dispToken;
+        }
+
+        public void TempDisplayBody(IBody2 body, IModelDoc2 model, IDisposeToken tempDisposeToken)
         {
             if (body == null)
             {
